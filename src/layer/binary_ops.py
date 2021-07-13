@@ -2,8 +2,6 @@ import _warnings
 
 import torch
 
-_warnings.simplefilter("always", DeprecationWarning)
-
 
 def safe_sign(tensor):
     result = torch.sign(tensor)

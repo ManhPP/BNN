@@ -2,7 +2,7 @@ import math
 
 import torch
 
-import binary_ops
+from src.layer.binary_ops import BinaryConnectDeterministic, BinaryConnectStochastic, ShiftBatch, AP2
 
 
 class BinaryLinear(torch.nn.Linear):
@@ -16,7 +16,7 @@ class BinaryLinear(torch.nn.Linear):
         torch.nn.Linear.__init__(self, in_features, out_features, bias=bias)
 
         self.deterministic = deterministic
-        self.bin_op = binary_ops.BinaryConnectDeterministic if deterministic else binary_ops.BinaryConnectStochastic
+        self.bin_op = BinaryConnectDeterministic if deterministic else BinaryConnectStochastic
 
     def reset_parameters(self):
         self.weight.data.normal_(0, 1 * (math.sqrt(1. / self.in_features)))
@@ -47,15 +47,15 @@ class BinaryLinear(torch.nn.Linear):
             return torch.nn.functional.linear(input, self.weight, self.bias)
 
 
-class BinConv2d(torch.nn.Conv2d):
+class BinaryConv2d(torch.nn.Conv2d):
 
     @staticmethod
     def convert(other, deterministic=True):
         if not isinstance(other, torch.nn.Conv2d):
             raise TypeError("Expected a torch.nn.Conv2d ! Receive:  {}".format(other.__class__))
-        return BinConv2d(other.in_channels, other.out_channels, other.kernel_size, stride=other.stride,
-                         padding=other.padding, dilation=other.dilation, groups=other.groups,
-                         bias=False if other.bias is None else True, deterministic=deterministic)
+        return BinaryConv2d(other.in_channels, other.out_channels, other.kernel_size, stride=other.stride,
+                            padding=other.padding, dilation=other.dilation, groups=other.groups,
+                            bias=False if other.bias is None else True, deterministic=deterministic)
 
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,
                  padding=0, dilation=1, groups=1, bias=True, deterministic=True):
@@ -75,7 +75,7 @@ class BinConv2d(torch.nn.Conv2d):
         torch.nn.Conv2d.__init__(self, in_channels, out_channels, kernel_size, stride=stride,
                                  padding=padding, dilation=dilation, groups=groups, bias=bias)
 
-        self.bin_op = binary_ops.BinaryConnectDeterministic if deterministic else binary_ops.BinaryConnectStochastic
+        self.bin_op = BinaryConnectDeterministic if deterministic else BinaryConnectStochastic
         self.deterministic = deterministic
 
     def clamp(self):
@@ -126,9 +126,9 @@ class ShiftNormBatch1d(torch.nn.Module):
     def forward(self, x):
         self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * torch.mean(x, 0).detach()
         self.running_var = (1 - self.momentum) * self.running_var + self.momentum * torch.mean(
-            (x - self.running_mean) * binary_ops.AP2(x - self.running_mean), 0).detach()
+            (x - self.running_mean) * AP2(x - self.running_mean), 0).detach()
 
-        return binary_ops.ShiftBatch.apply(x, self.running_mean, self.running_var, self.weight, self.bias, self.eps)
+        return ShiftBatch.apply(x, self.running_mean, self.running_var, self.weight, self.bias, self.eps)
 
 
 class ShiftNormBatch2d(torch.nn.Module):
@@ -157,8 +157,8 @@ class ShiftNormBatch2d(torch.nn.Module):
         curr_mean = ShiftNormBatch2d._tile(self.running_mean, dim)
 
         self.running_var = (1 - self.momentum) * self.running_var + self.momentum * torch.mean(
-            (x - curr_mean) * binary_ops.AP2(x - curr_mean), [0, 2, 3]).detach()
+            (x - curr_mean) * AP2(x - curr_mean), [0, 2, 3]).detach()
 
-        return binary_ops.ShiftBatch.apply(x, curr_mean, ShiftNormBatch2d._tile(self.running_var, dim),
-                                               ShiftNormBatch2d._tile(self.weight, dim),
-                                               ShiftNormBatch2d._tile(self.bias, dim), self.eps)
+        return ShiftBatch.apply(x, curr_mean, ShiftNormBatch2d._tile(self.running_var, dim),
+                                           ShiftNormBatch2d._tile(self.weight, dim),
+                                           ShiftNormBatch2d._tile(self.bias, dim), self.eps)
