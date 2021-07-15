@@ -5,9 +5,9 @@ from src.layer.binary_layer import BinaryConv2d, ShiftNormBatch2d, BinaryLinear,
 from src.layer.binary_ops import BinaryConnectDeterministic
 
 
-class BinMNIST(torch.nn.Module):
+class BinCNN(torch.nn.Module):
     def __init__(self, out_features, num_units=2048):
-        super(BinMNIST, self).__init__()
+        super(BinCNN, self).__init__()
 
         self.conv1 = BinaryConv2d(1, 32, kernel_size=3, padding=1)
         self.norm1 = ShiftNormBatch2d(32, eps=1e-4, momentum=0.15)
@@ -37,7 +37,7 @@ class BinMNIST(torch.nn.Module):
         self.linear3.clamp()
         self.linear4.clamp()
 
-    def forward(self, x, dropout=True):
+    def forward(self, x):
         x = self.activation(self.conv1(x.view(-1, 1, 28, 28)))
         x = self.norm1(x)
         x = BinaryConnectDeterministic.apply(x)

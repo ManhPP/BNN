@@ -3,7 +3,8 @@ from torch import nn, optim
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
-from src.model.binary_net import BinMNIST
+from src.model.cnn import BinCNN
+from src.model.resnet import Resnet18
 
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=True, download=True,
@@ -19,9 +20,11 @@ test_loader = torch.utils.data.DataLoader(
     ])),
     batch_size=64, shuffle=True)
 
-model = BinMNIST(10)
+# model = BinCNN(10)
+model = Resnet18()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
+
 
 def train(epoch):
     model.train()
