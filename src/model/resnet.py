@@ -1,7 +1,8 @@
+import torch
 from torch import nn
 import torch.nn.functional as F
 
-from src.layer.binary_layer import BinaryConv2d
+from src.layer.binary_layer import BinaryConv2d, BinaryLinear
 from src.layer.binary_ops import binary_connect
 
 
@@ -12,7 +13,7 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
         self.conv1 = BinaryConv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.binarisation = binary_connect(stochastic=True)
+        self.binarization = binary_connect(stochastic=True)
         self.conv2 = BinaryConv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
 
@@ -26,8 +27,8 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
-        out = self.binarisation(F.relu(self.bn1(self.conv1(x)), inplace=True))
-        out = self.binarisation(F.relu(self.bn2(self.conv2(x)), inplace=True))
+        out = self.binarization(F.relu(self.bn1(self.conv1(x)), inplace=True))
+        out = self.binarization(F.relu(self.bn2(self.conv2(out)), inplace=True))
         out += self.shortcut(x)
         out = F.relu(out)
         return out
@@ -72,7 +73,8 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512 * block.expansion, num_classes)
+        self.linear = BinaryLinear(512 * block.expansion, num_classes)
+        # self.linear = nn.Linear(512 * block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -94,6 +96,32 @@ class ResNet(nn.Module):
         return out
 
 
-class Resnet18(ResNet):
+class ResNet18(ResNet):
     def __init__(self):
-        super(Resnet18, self).__init__(BasicBlock, [2, 2, 2, 2])
+        super(ResNet18, self).__init__(BasicBlock, [2, 2, 2, 2])
+
+
+class ResNet34(ResNet):
+    def __init__(self):
+        super(ResNet34, self).__init__(BasicBlock, [3, 4, 6, 3])
+
+
+class ResNet50(ResNet):
+    def __init__(self):
+        super(ResNet50, self).__init__(Bottleneck, [3, 4, 6, 3])
+
+
+class ResNet101(ResNet):
+    def __init__(self):
+        super(ResNet101, self).__init__(Bottleneck, [3, 4, 23, 3])
+
+
+class ResNet152(ResNet):
+    def __init__(self):
+        super(ResNet152, self).__init__(Bottleneck, [3, 8, 36, 3])
+
+
+if __name__ == '__main__':
+    net = ResNet18()
+    y = net(torch.randn(1, 3, 32, 32))
+    print(y.size())

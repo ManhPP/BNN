@@ -160,5 +160,5 @@ class ShiftNormBatch2d(torch.nn.Module):
             (x - curr_mean) * AP2(x - curr_mean), [0, 2, 3]).detach()
 
         return ShiftBatch.apply(x, curr_mean, ShiftNormBatch2d._tile(self.running_var, dim),
-                                           ShiftNormBatch2d._tile(self.weight, dim),
-                                           ShiftNormBatch2d._tile(self.bias, dim), self.eps)
+                                ShiftNormBatch2d._tile(self.weight, dim),
+                                ShiftNormBatch2d._tile(self.bias, dim), self.eps)
