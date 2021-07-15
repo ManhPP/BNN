@@ -62,9 +62,9 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
+class BinResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
-        super(ResNet, self).__init__()
+        super(BinResNet, self).__init__()
         self.in_planes = 64
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
@@ -96,32 +96,32 @@ class ResNet(nn.Module):
         return out
 
 
-class ResNet18(ResNet):
+class BinResNet18(BinResNet):
     def __init__(self):
-        super(ResNet18, self).__init__(BasicBlock, [2, 2, 2, 2])
+        super(BinResNet18, self).__init__(BasicBlock, [2, 2, 2, 2])
 
 
-class ResNet34(ResNet):
+class BinResNet34(BinResNet):
     def __init__(self):
-        super(ResNet34, self).__init__(BasicBlock, [3, 4, 6, 3])
+        super(BinResNet34, self).__init__(BasicBlock, [3, 4, 6, 3])
 
 
-class ResNet50(ResNet):
+class BinResNet50(BinResNet):
     def __init__(self):
-        super(ResNet50, self).__init__(Bottleneck, [3, 4, 6, 3])
+        super(BinResNet50, self).__init__(Bottleneck, [3, 4, 6, 3])
 
 
-class ResNet101(ResNet):
+class BinResNet101(BinResNet):
     def __init__(self):
-        super(ResNet101, self).__init__(Bottleneck, [3, 4, 23, 3])
+        super(BinResNet101, self).__init__(Bottleneck, [3, 4, 23, 3])
 
 
-class ResNet152(ResNet):
+class BinResNet152(BinResNet):
     def __init__(self):
-        super(ResNet152, self).__init__(Bottleneck, [3, 8, 36, 3])
+        super(BinResNet152, self).__init__(Bottleneck, [3, 8, 36, 3])
 
 
 if __name__ == '__main__':
-    net = ResNet18()
+    net = BinResNet18()
     y = net(torch.randn(1, 3, 32, 32))
     print(y.size())

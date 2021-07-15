@@ -2,10 +2,11 @@ import torch
 from torch import nn, optim
 from torch.autograd import Variable
 from torchvision import datasets, transforms
+import torch.backends.cudnn as cudnn
 
 from src.model.cnn import BinCNN
-from src.model.resnet import ResNet18
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=True, download=True,
                    transform=transforms.Compose([
@@ -21,6 +22,12 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=64, shuffle=True)
 
 model = BinCNN(10)
+model.to(device=device)
+
+if device == 'cuda':
+    net = torch.nn.DataParallel(model)
+    cudnn.benchmark = True
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
 
@@ -28,6 +35,7 @@ optimizer = optim.Adam(model.parameters())
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
@@ -49,7 +57,7 @@ def train(epoch):
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                       100. * batch_idx / len(train_loader), loss.item()))
+                100. * batch_idx / len(train_loader), loss.item()))
 
 
 def test():
@@ -58,6 +66,7 @@ def test():
     correct = 0
     with torch.no_grad():
         for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
             data, target = Variable(data), Variable(target)
             output = model(data)
             test_loss += criterion(output, target).item()  # sum up batch loss
