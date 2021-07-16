@@ -4,7 +4,7 @@ from torch.autograd import Variable
 from torchvision import datasets, transforms
 import torch.backends.cudnn as cudnn
 
-from src.model.cnn import BinCNN
+from src.model.binary_cnn import BinaryCNN
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 train_loader = torch.utils.data.DataLoader(
@@ -21,7 +21,7 @@ test_loader = torch.utils.data.DataLoader(
     ])),
     batch_size=64, shuffle=True)
 
-model = BinCNN(10)
+model = BinaryCNN(10)
 model.to(device=device)
 
 if device == 'cuda':

@@ -7,7 +7,7 @@ from torch import nn, optim
 from torch.backends import cudnn
 from torchvision.transforms import transforms
 
-from src.model.resnet import BinResNet18
+from src.model.binary_resnet import BinaryResNet18
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -38,7 +38,7 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
 print('==> Building model..')
-net = BinResNet18()
+net = BinaryResNet18()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
