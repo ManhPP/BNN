@@ -52,6 +52,8 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 writer = SummaryWriter('./runs/' + net._get_name())
 
+writer.add_graph(model=net, input_to_model=torch.randn(1, 3, 32, 32))
+
 
 def train(epoch):
     print('\nEpoch: %d' % epoch)
@@ -117,3 +119,4 @@ if __name__ == '__main__':
         train(epoch)
         test(epoch)
         scheduler.step()
+    writer.close()

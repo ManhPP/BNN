@@ -36,6 +36,8 @@ optimizer = optim.Adam(model.parameters())
 
 writer = SummaryWriter('./runs/' + model._get_name())
 
+writer.add_graph(model=model, input_to_model=torch.randn(28, 28, 1))
+
 
 def train(epoch):
     model.train()
@@ -65,13 +67,13 @@ def train(epoch):
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
+                       100. * batch_idx / len(train_loader), loss.item()))
 
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
         train_loss += loss.item()
-    writer.add_scalar("train/loss", train_loss/len(train_loader), epoch)
-    writer.add_scalar("train/acc", 100. * correct/len(train_loader), epoch)
+    writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
+    writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
 
 
 def test():
@@ -112,3 +114,4 @@ if __name__ == '__main__':
     for epoch in range(1, 101):
         train(epoch)
         test()
+    writer.close()
