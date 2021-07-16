@@ -5,6 +5,7 @@ import torch
 import torchvision
 from torch import nn, optim
 from torch.backends import cudnn
+from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import transforms
 
 from src.model.binary_resnet import BinaryResNet18
@@ -24,15 +25,15 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(
+train_set = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=128, shuffle=True, num_workers=2)
+train_loader = torch.utils.data.DataLoader(
+    train_set, batch_size=128, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.CIFAR10(
+test_set = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2)
+test_loader = torch.utils.data.DataLoader(
+    test_set, batch_size=100, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -49,6 +50,8 @@ optimizer = optim.SGD(net.parameters(), lr=0.01,
                       momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
+writer = SummaryWriter('./runs/' + net._get_name())
+
 
 def train(epoch):
     print('\nEpoch: %d' % epoch)
@@ -56,7 +59,7 @@ def train(epoch):
     train_loss = 0
     correct = 0
     total = 0
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
+    for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
@@ -69,6 +72,9 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
+    writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
+    writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
+
 
 def test(epoch):
     global best_acc
@@ -77,7 +83,7 @@ def test(epoch):
     correct = 0
     total = 0
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
+        for batch_idx, (inputs, targets) in enumerate(test_loader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
@@ -89,6 +95,10 @@ def test(epoch):
 
     # Save checkpoint.
     acc = 100. * correct / total
+    test_loss /= len(test_loader)
+    writer.add_scalar("test/loss", test_loss, epoch)
+    writer.add_scalar("test/acc", acc, epoch)
+
     if acc > best_acc:
         print('Saving..')
         state = {
@@ -98,7 +108,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        torch.save(state, './checkpoint/' + net._get_name() + '.pth')
         best_acc = acc
 
 

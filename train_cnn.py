@@ -1,6 +1,9 @@
+import os
+
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 import torch.backends.cudnn as cudnn
 
@@ -31,9 +34,14 @@ if device == 'cuda':
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
 
+writer = SummaryWriter('./runs/' + model._get_name())
+
 
 def train(epoch):
     model.train()
+    correct = 0
+    train_loss = 0
+
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         data, target = Variable(data), Variable(target)
@@ -59,8 +67,15 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
+        pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        train_loss += loss.item()
+    writer.add_scalar("train/loss", train_loss/len(train_loader), epoch)
+    writer.add_scalar("train/acc", 100. * correct/len(train_loader), epoch)
+
 
 def test():
+    global best_acc
     model.eval()
     test_loss = 0
     correct = 0
@@ -74,9 +89,23 @@ def test():
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
+    acc = 100. * correct / len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+        test_loss, correct, len(test_loader.dataset), acc))
+    writer.add_scalar("test/loss", test_loss, epoch)
+    writer.add_scalar("test/acc", acc, epoch)
+
+    if acc > best_acc:
+        print('Saving..')
+        state = {
+            'net': net.state_dict(),
+            'acc': acc,
+            'epoch': epoch,
+        }
+        if not os.path.isdir('checkpoint'):
+            os.mkdir('checkpoint')
+        torch.save(state, './checkpoint/' + model._get_name() + '.pth')
+        best_acc = acc
 
 
 if __name__ == '__main__':
