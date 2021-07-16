@@ -36,7 +36,7 @@ optimizer = optim.Adam(model.parameters())
 
 writer = SummaryWriter('./runs/' + model._get_name())
 
-writer.add_graph(model=model, input_to_model=torch.randn(28, 28, 1))
+writer.add_graph(model=model, input_to_model=torch.randn(28, 28, 1, device=device))
 
 
 def train(epoch):
