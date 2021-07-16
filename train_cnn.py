@@ -97,7 +97,7 @@ def test():
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
 
-    if acc > best_acc:
+    if best_acc is not None and acc > best_acc:
         print('Saving..')
         state = {
             'net': net.state_dict(),
