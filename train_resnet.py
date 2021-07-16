@@ -53,6 +53,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 writer = SummaryWriter('./runs/' + net._get_name())
 
 writer.add_graph(model=net, input_to_model=torch.randn(1, 3, 32, 32, device=device))
+best_acc = 0
 
 
 def train(epoch):
@@ -73,6 +74,11 @@ def train(epoch):
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
+
+        if batch_idx % 10 == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(inputs), len(train_loader.dataset),
+                       100. * batch_idx / len(train_loader), loss.item()))
 
     writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
     writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
@@ -101,7 +107,7 @@ def test(epoch):
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
 
-    if best_acc is not None and acc > best_acc:
+    if acc > best_acc:
         print('Saving..')
         state = {
             'net': net.state_dict(),

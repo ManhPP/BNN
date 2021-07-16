@@ -37,6 +37,7 @@ optimizer = optim.Adam(model.parameters())
 writer = SummaryWriter('./runs/' + model._get_name())
 
 writer.add_graph(model=model, input_to_model=torch.randn(28, 28, 1, device=device))
+best_acc = 0
 
 
 def train(epoch):
@@ -64,14 +65,16 @@ def train(epoch):
             if hasattr(p, 'org'):
                 p.org.copy_(p.data.clamp_(-1, 1))
 
+        pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        train_loss += loss.item()
+
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader), loss.item()))
 
-        pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-        train_loss += loss.item()
+
     writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
     writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
 
@@ -97,7 +100,7 @@ def test():
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
 
-    if best_acc is not None and acc > best_acc:
+    if acc > best_acc:
         print('Saving..')
         state = {
             'net': net.state_dict(),
