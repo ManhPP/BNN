@@ -74,7 +74,7 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
-    writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
+    writer.add_scalar("train/loss", train_loss / len(train_loader.dataset), epoch)
     writer.add_scalar("train/acc", correct / len(train_loader.dataset), epoch)
 
 
@@ -92,7 +92,7 @@ def test():
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-    test_loss /= len(test_loader.dataset)
+    test_loss /= len(test_loader)
     acc = correct / len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset), 100. * acc))
