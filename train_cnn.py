@@ -66,13 +66,14 @@ def train(epoch):
                 p.org.copy_(p.data.clamp_(-1, 1))
 
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        acc = pred.eq(target.data.view_as(pred)).cpu().sum()
+        correct += acc
         train_loss += loss.item()
 
         if batch_idx % 10 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}, Accuracy: {}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
+                100. * batch_idx / len(train_loader), loss.item(), acc/len(data)))
 
     writer.add_scalar("train/loss", train_loss / len(train_loader.dataset), epoch)
     writer.add_scalar("train/acc", correct / len(train_loader.dataset), epoch)
