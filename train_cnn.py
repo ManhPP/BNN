@@ -72,11 +72,10 @@ def train(epoch):
         if batch_idx % 10 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                       100. * batch_idx / len(train_loader), loss.item()))
-
+                100. * batch_idx / len(train_loader), loss.item()))
 
     writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
-    writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
+    writer.add_scalar("train/acc", correct / len(train_loader.dataset), epoch)
 
 
 def test():
@@ -94,9 +93,9 @@ def test():
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
-    acc = 100. * correct / len(test_loader.dataset)
+    acc = correct / len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset), acc))
+        test_loss, correct, len(test_loader.dataset), 100. * acc))
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
 
