@@ -8,6 +8,7 @@ from torchvision import datasets, transforms
 import torch.backends.cudnn as cudnn
 
 from src.model.binary_cnn import BinaryCNN
+from src.model.fc import FC, BinaryFC
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 train_loader = torch.utils.data.DataLoader(
@@ -24,7 +25,7 @@ test_loader = torch.utils.data.DataLoader(
     ])),
     batch_size=64, shuffle=True)
 
-model = BinaryCNN(10)
+model = BinaryFC()
 model.to(device=device)
 
 if device == 'cuda':
