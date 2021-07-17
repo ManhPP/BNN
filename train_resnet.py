@@ -81,7 +81,7 @@ def train(epoch):
                        100. * batch_idx / len(train_loader), loss.item()))
 
     writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
-    writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
+    writer.add_scalar("train/acc", correct / len(train_loader.dataset), epoch)
 
 
 def test(epoch):
@@ -102,7 +102,7 @@ def test(epoch):
             correct += predicted.eq(targets).sum().item()
 
     # Save checkpoint.
-    acc = 100. * correct / total
+    acc = correct / total
     test_loss /= len(test_loader)
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
