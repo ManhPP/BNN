@@ -115,7 +115,7 @@ def test():
 
 
 if __name__ == '__main__':
-    for epoch in range(1, 101):
+    for epoch in range(1, 11):
         train(epoch)
         test()
     writer.close()
