@@ -10,16 +10,16 @@ class BinaryFC(torch.nn.Module):
         super(BinaryFC, self).__init__()
 
         self.linear1 = BinaryLinear(in_features, num_units)
-        self.norm1 = ShiftNormBatch1d(num_units, eps=1e-4, momentum=0.15)
+        self.norm1 = nn.BatchNorm1d(num_units, eps=1e-4, momentum=0.15)
 
         self.linear2 = BinaryLinear(num_units, num_units)
-        self.norm2 = ShiftNormBatch1d(num_units, eps=1e-4, momentum=0.15)
+        self.norm2 = nn.BatchNorm1d(num_units, eps=1e-4, momentum=0.15)
 
         self.linear3 = BinaryLinear(num_units, num_units)
-        self.norm3 = ShiftNormBatch1d(num_units, eps=1e-4, momentum=0.15)
+        self.norm3 = nn.BatchNorm1d(num_units, eps=1e-4, momentum=0.15)
 
         self.linear4 = BinaryLinear(num_units, out_features)
-        self.norm4 = ShiftNormBatch1d(out_features, eps=1e-4, momentum=0.15)
+        self.norm4 = nn.BatchNorm1d(out_features, eps=1e-4, momentum=0.15)
 
         self.activation = nn.ReLU()
         self.act_end = nn.LogSoftmax()
