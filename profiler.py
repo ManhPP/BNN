@@ -26,8 +26,8 @@ train_loader = torch.utils.data.DataLoader(
 dataiter = iter(train_loader)
 inputs, targets = dataiter.next()
 
-with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
+with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True) as prof:
     with record_function("model_inference"):
         model(inputs)
 
-print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
+print(prof.key_averages().table())
