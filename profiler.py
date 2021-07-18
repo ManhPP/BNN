@@ -6,14 +6,14 @@ from src.model.binary_cnn import BinaryCNN
 from src.model.cnn import CNN
 from src.model.fc import BinaryFC, FC
 
-model = BinaryFC()
+model = FC()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-checkpoint = torch.load("checkpoint/BinaryFC.pth", map_location=device)
+checkpoint = torch.load("checkpoint/" + model._get_name() + ".pth", map_location=device)
 state_dict = checkpoint['net']
 model.load_state_dict(state_dict, strict=False)
 
-model.eval()
+model.train()
 
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=True, download=True,
