@@ -6,7 +6,7 @@ from src.layer.binary_ops import BinaryConnectDeterministic
 
 
 class BinaryCNN(torch.nn.Module):
-    def __init__(self, out_features, num_units=2048):
+    def __init__(self, out_features=10, num_units=2048):
         super(BinaryCNN, self).__init__()
 
         self.conv1 = BinaryConv2d(1, 32, kernel_size=3, padding=1)

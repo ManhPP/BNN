@@ -13,7 +13,7 @@ checkpoint = torch.load("checkpoint/" + model._get_name() + ".pth", map_location
 state_dict = checkpoint['net']
 model.load_state_dict(state_dict, strict=False)
 
-model.train()
+model.eval()
 
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=True, download=True,
