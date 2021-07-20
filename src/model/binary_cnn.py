@@ -1,26 +1,26 @@
 import torch
 from torch import nn
 
-from src.layer.binary_layer import BinaryConv2d, ShiftNormBatch2d, BinaryLinear, ShiftNormBatch1d
+from src.layer.binary_layer import BinaryConv2d, BinaryLinear
 from src.layer.binary_ops import BinaryConnectDeterministic
 
 
 class BinaryCNN(torch.nn.Module):
-    def __init__(self, out_features, num_units=2048):
+    def __init__(self, out_features=10, num_units=2048):
         super(BinaryCNN, self).__init__()
 
         self.conv1 = BinaryConv2d(1, 32, kernel_size=3, padding=1)
-        self.norm1 = ShiftNormBatch2d(32, eps=1e-4, momentum=0.15)
+        self.norm1 = nn.BatchNorm2d(32, eps=1e-4, momentum=0.15)
 
         self.conv2 = BinaryConv2d(32, 64, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2)
-        self.norm2 = ShiftNormBatch2d(64, eps=1e-4, momentum=0.15)
+        self.norm2 = nn.BatchNorm2d(64, eps=1e-4, momentum=0.15)
 
         self.linear3 = BinaryLinear(10816, num_units)  # 64 * 13 *  13
-        self.norm3 = ShiftNormBatch1d(num_units, eps=1e-4, momentum=0.15)
+        self.norm3 = nn.BatchNorm1d(num_units, eps=1e-4, momentum=0.15)
 
         self.linear4 = BinaryLinear(num_units, out_features)
-        self.norm4 = ShiftNormBatch1d(out_features, eps=1e-4, momentum=0.15)
+        self.norm4 = nn.BatchNorm1d(out_features, eps=1e-4, momentum=0.15)
 
         self.activation = nn.ReLU()
         self.act_end = nn.LogSoftmax()

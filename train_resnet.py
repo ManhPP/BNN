@@ -52,6 +52,9 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 writer = SummaryWriter('./runs/' + net._get_name())
 
+writer.add_graph(model=net, input_to_model=torch.randn(1, 3, 32, 32, device=device))
+best_acc = 0
+
 
 def train(epoch):
     print('\nEpoch: %d' % epoch)
@@ -72,8 +75,13 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
+        if batch_idx % 10 == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(inputs), len(train_loader.dataset),
+                       100. * batch_idx / len(train_loader), loss.item()))
+
     writer.add_scalar("train/loss", train_loss / len(train_loader), epoch)
-    writer.add_scalar("train/acc", 100. * correct / len(train_loader), epoch)
+    writer.add_scalar("train/acc", correct / len(train_loader.dataset), epoch)
 
 
 def test(epoch):
@@ -94,7 +102,7 @@ def test(epoch):
             correct += predicted.eq(targets).sum().item()
 
     # Save checkpoint.
-    acc = 100. * correct / total
+    acc = correct / total
     test_loss /= len(test_loader)
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
@@ -117,3 +125,4 @@ if __name__ == '__main__':
         train(epoch)
         test(epoch)
         scheduler.step()
+    writer.close()

@@ -8,6 +8,7 @@ from torchvision import datasets, transforms
 import torch.backends.cudnn as cudnn
 
 from src.model.binary_cnn import BinaryCNN
+from src.model.fc import FC, BinaryFC
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 train_loader = torch.utils.data.DataLoader(
@@ -24,7 +25,7 @@ test_loader = torch.utils.data.DataLoader(
     ])),
     batch_size=64, shuffle=True)
 
-model = BinaryCNN(10)
+model = BinaryFC()
 model.to(device=device)
 
 if device == 'cuda':
@@ -35,6 +36,9 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
 
 writer = SummaryWriter('./runs/' + model._get_name())
+
+writer.add_graph(model=model, input_to_model=torch.randn(28, 28, 1, device=device))
+best_acc = 0
 
 
 def train(epoch):
@@ -62,16 +66,18 @@ def train(epoch):
             if hasattr(p, 'org'):
                 p.org.copy_(p.data.clamp_(-1, 1))
 
-        if batch_idx % 10 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        acc = pred.eq(target.data.view_as(pred)).cpu().sum()
+        correct += acc
         train_loss += loss.item()
-    writer.add_scalar("train/loss", train_loss/len(train_loader), epoch)
-    writer.add_scalar("train/acc", 100. * correct/len(train_loader), epoch)
+
+        if batch_idx % 10 == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}, Accuracy: {}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item(), acc/len(data)))
+
+    writer.add_scalar("train/loss", train_loss / len(train_loader.dataset), epoch)
+    writer.add_scalar("train/acc", correct / len(train_loader.dataset), epoch)
 
 
 def test():
@@ -88,10 +94,10 @@ def test():
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-    test_loss /= len(test_loader.dataset)
-    acc = 100. * correct / len(test_loader.dataset)
+    test_loss /= len(test_loader)
+    acc = correct / len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset), acc))
+        test_loss, correct, len(test_loader.dataset), 100. * acc))
     writer.add_scalar("test/loss", test_loss, epoch)
     writer.add_scalar("test/acc", acc, epoch)
 
@@ -109,6 +115,7 @@ def test():
 
 
 if __name__ == '__main__':
-    for epoch in range(1, 101):
+    for epoch in range(1, 11):
         train(epoch)
         test()
+    writer.close()
